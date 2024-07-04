@@ -1151,7 +1151,7 @@ class W3MService with ChangeNotifier, CoinbaseService implements IW3MService {
     try {
       await request(
         topic: _currentSession?.topic ?? '',
-        chainId: currentChainId,
+        chainId: session?.getApprovedChains()?.last ?? currentChainId,
         switchToChainId: newChainId,
         request: SessionRequestParams(
           method: MethodsConstants.walletSwitchEthChain,
