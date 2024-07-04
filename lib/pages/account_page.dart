@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:web3modal_flutter/constants/key_constants.dart';
 import 'package:web3modal_flutter/pages/edit_email_page.dart';
 import 'package:web3modal_flutter/pages/select_network_page.dart';
@@ -9,18 +8,17 @@ import 'package:web3modal_flutter/services/explorer_service/explorer_service_sin
 import 'package:web3modal_flutter/services/w3m_service/i_w3m_service.dart';
 import 'package:web3modal_flutter/theme/constants.dart';
 import 'package:web3modal_flutter/utils/asset_util.dart';
-import 'package:web3modal_flutter/widgets/loader.dart';
-import 'package:web3modal_flutter/widgets/miscellaneous/content_loading.dart';
-import 'package:web3modal_flutter/widgets/widget_stack/widget_stack_singleton.dart';
 import 'package:web3modal_flutter/web3modal_flutter.dart';
-import 'package:web3modal_flutter/widgets/web3modal_provider.dart';
 import 'package:web3modal_flutter/widgets/avatars/w3m_account_orb.dart';
 import 'package:web3modal_flutter/widgets/buttons/address_copy_button.dart';
 import 'package:web3modal_flutter/widgets/buttons/simple_icon_button.dart';
 import 'package:web3modal_flutter/widgets/icons/rounded_icon.dart';
 import 'package:web3modal_flutter/widgets/lists/list_items/account_list_item.dart';
+import 'package:web3modal_flutter/widgets/miscellaneous/content_loading.dart';
 import 'package:web3modal_flutter/widgets/navigation/navbar_action_button.dart';
 import 'package:web3modal_flutter/widgets/text/w3m_balance.dart';
+import 'package:web3modal_flutter/widgets/web3modal_provider.dart';
+import 'package:web3modal_flutter/widgets/widget_stack/widget_stack_singleton.dart';
 
 class AccountPage extends StatefulWidget {
   const AccountPage() : super(key: KeyConstants.accountPage);
@@ -99,7 +97,7 @@ class _AccountPageState extends State<AccountPage> with WidgetsBindingObserver {
                             title: 'Block Explorer',
                             backgroundColor: themeColors.background125,
                             foregroundColor: themeColors.foreground150,
-                            overlayColor: MaterialStateProperty.all<Color>(
+                            overlayColor: WidgetStateProperty.all<Color>(
                               themeColors.background200,
                             ),
                           ),
@@ -137,12 +135,10 @@ class _AccountPageState extends State<AccountPage> with WidgetsBindingObserver {
                           subtitle: 'Transition to a self-custodial wallet',
                           hightlighted: true,
                           flexible: true,
-                          titleStyle:
-                              themeData.textStyles.paragraph500.copyWith(
+                          titleStyle: themeData.textStyles.paragraph500.copyWith(
                             color: themeColors.foreground100,
                           ),
-                          onTap: () =>
-                              widgetStack.instance.push(UpgradeWalletPage()),
+                          onTap: () => widgetStack.instance.push(UpgradeWalletPage()),
                         ),
                       ],
                     ),
@@ -156,8 +152,7 @@ class _AccountPageState extends State<AccountPage> with WidgetsBindingObserver {
                           iconPath: 'assets/icons/mail.svg',
                           iconColor: themeColors.foreground100,
                           title: _service!.session?.email ?? '',
-                          titleStyle:
-                              themeData.textStyles.paragraph500.copyWith(
+                          titleStyle: themeData.textStyles.paragraph500.copyWith(
                             color: themeColors.foreground100,
                           ),
                           onTap: () {
@@ -170,27 +165,6 @@ class _AccountPageState extends State<AccountPage> with WidgetsBindingObserver {
                   const SizedBox.square(dimension: kPadding8),
                   _SelectNetworkButton(),
                   const SizedBox.square(dimension: kPadding8),
-                  AccountListItem(
-                    iconPath: 'assets/icons/disconnect.svg',
-                    trailing: _service!.status.isLoading
-                        ? Row(
-                            children: [
-                              CircularLoader(size: 18.0, strokeWidth: 2.0),
-                              SizedBox.square(dimension: kPadding12),
-                            ],
-                          )
-                        : const SizedBox.shrink(),
-                    title: 'Disconnect',
-                    titleStyle: themeData.textStyles.paragraph500.copyWith(
-                      color: themeColors.foreground200,
-                    ),
-                    onTap: _service!.status.isLoading
-                        ? null
-                        : () async {
-                            await _service!.disconnect();
-                            _service!.closeModal();
-                          },
-                  ),
                 ],
               ),
             ),

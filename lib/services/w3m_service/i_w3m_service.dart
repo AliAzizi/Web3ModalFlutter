@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:web3modal_flutter/web3modal_flutter.dart';
 
 enum W3MServiceStatus {
@@ -10,6 +9,13 @@ enum W3MServiceStatus {
 
   bool get isInitialized => this == initialized;
   bool get isLoading => this == initializing;
+}
+
+enum W3MSwitchChainResult {
+  pending,
+  success,
+  rejected,
+  notSupported;
 }
 
 /// Either a [projectId] and [metadata] must be provided or an already created [web3App].
@@ -133,6 +139,8 @@ abstract class IW3MService with ChangeNotifier {
 
   Future<void> requestSwitchToChain(W3MChainInfo newChain);
   Future<void> requestAddChain(W3MChainInfo newChain);
+
+  Future<W3MSwitchChainResult> switchChain(W3MChainInfo newChain);
 
   /// Closes the modal.
   void closeModal();

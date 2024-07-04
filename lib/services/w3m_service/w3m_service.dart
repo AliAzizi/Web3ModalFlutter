@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import 'package:web3modal_flutter/constants/string_constants.dart';
 import 'package:web3modal_flutter/pages/account_page.dart';
 import 'package:web3modal_flutter/pages/approve_magic_request_page.dart';
@@ -14,6 +13,8 @@ import 'package:web3modal_flutter/pages/select_network_page.dart';
 import 'package:web3modal_flutter/services/analytics_service/analytics_service.dart';
 import 'package:web3modal_flutter/services/analytics_service/analytics_service_singleton.dart';
 import 'package:web3modal_flutter/services/analytics_service/models/analytics_event.dart';
+import 'package:web3modal_flutter/services/blockchain_api_service/blockchain_api_utils.dart';
+import 'package:web3modal_flutter/services/blockchain_api_service/blockchain_api_utils_singleton.dart';
 import 'package:web3modal_flutter/services/coinbase_service/coinbase_service.dart';
 import 'package:web3modal_flutter/services/coinbase_service/i_coinbase_service.dart';
 import 'package:web3modal_flutter/services/coinbase_service/models/coinbase_data.dart';
@@ -23,27 +24,25 @@ import 'package:web3modal_flutter/services/explorer_service/explorer_service_sin
 import 'package:web3modal_flutter/services/explorer_service/models/redirect.dart';
 import 'package:web3modal_flutter/services/ledger_service/ledger_service_singleton.dart';
 import 'package:web3modal_flutter/services/logger_service/i_logger_service.dart';
+import 'package:web3modal_flutter/services/logger_service/logger_service.dart';
+import 'package:web3modal_flutter/services/logger_service/logger_service_singleton.dart';
 import 'package:web3modal_flutter/services/magic_service/magic_service.dart';
 import 'package:web3modal_flutter/services/magic_service/magic_service_singleton.dart';
 import 'package:web3modal_flutter/services/magic_service/models/magic_data.dart';
 import 'package:web3modal_flutter/services/magic_service/models/magic_events.dart';
-import 'package:web3modal_flutter/services/logger_service/logger_service.dart';
-import 'package:web3modal_flutter/services/logger_service/logger_service_singleton.dart';
-import 'package:web3modal_flutter/utils/core/core_utils_singleton.dart';
-import 'package:web3modal_flutter/utils/platform/i_platform_utils.dart';
-import 'package:web3modal_flutter/utils/url/launch_url_exception.dart';
-import 'package:web3modal_flutter/web3modal_flutter.dart';
-import 'package:web3modal_flutter/widgets/widget_stack/widget_stack_singleton.dart';
-import 'package:web3modal_flutter/services/blockchain_api_service/blockchain_api_utils.dart';
-import 'package:web3modal_flutter/services/blockchain_api_service/blockchain_api_utils_singleton.dart';
 import 'package:web3modal_flutter/services/network_service/network_service_singleton.dart';
 import 'package:web3modal_flutter/services/storage_service/storage_service_singleton.dart';
 import 'package:web3modal_flutter/services/w3m_service/i_w3m_service.dart';
-import 'package:web3modal_flutter/widgets/web3modal.dart';
-import 'package:web3modal_flutter/widgets/web3modal_provider.dart';
+import 'package:web3modal_flutter/utils/core/core_utils_singleton.dart';
+import 'package:web3modal_flutter/utils/platform/i_platform_utils.dart';
 import 'package:web3modal_flutter/utils/platform/platform_utils_singleton.dart';
 import 'package:web3modal_flutter/utils/toast/toast_utils_singleton.dart';
+import 'package:web3modal_flutter/utils/url/launch_url_exception.dart';
 import 'package:web3modal_flutter/utils/url/url_utils_singleton.dart';
+import 'package:web3modal_flutter/web3modal_flutter.dart';
+import 'package:web3modal_flutter/widgets/web3modal.dart';
+import 'package:web3modal_flutter/widgets/web3modal_provider.dart';
+import 'package:web3modal_flutter/widgets/widget_stack/widget_stack_singleton.dart';
 
 /// Either a [projectId] and [metadata] must be provided or an already created [web3App].
 /// optionalNamespaces is mostly not needed, if you use it, the values set here will override every optionalNamespaces set in evey chain
@@ -68,8 +67,7 @@ class W3MService with ChangeNotifier, CoinbaseService implements IW3MService {
   Map<String, RequiredNamespace> _optionalNamespaces = {};
 
   @override
-  bool get hasNamespaces =>
-      _requiredNamespaces.isNotEmpty || _optionalNamespaces.isNotEmpty;
+  bool get hasNamespaces => _requiredNamespaces.isNotEmpty || _optionalNamespaces.isNotEmpty;
 
   String _wcUri = '';
   @override
@@ -183,13 +181,11 @@ class W3MService with ChangeNotifier, CoinbaseService implements IW3MService {
   Future<void> init() async {
     _serviceInitialized = false;
     if (!coreUtils.instance.isValidProjectID(_projectId)) {
-      loggerService.instance.e(
-          '[$runtimeType] projectId $_projectId is invalid. Please provide a valid projectId. '
+      loggerService.instance.e('[$runtimeType] projectId $_projectId is invalid. Please provide a valid projectId. '
           'See https://docs.walletconnect.com/web3modal/flutter/options for details.');
       return;
     }
-    if (_status == W3MServiceStatus.initializing ||
-        _status == W3MServiceStatus.initialized) {
+    if (_status == W3MServiceStatus.initializing || _status == W3MServiceStatus.initialized) {
       return;
     }
     _status = W3MServiceStatus.initializing;
@@ -936,8 +932,7 @@ class W3MService with ChangeNotifier, CoinbaseService implements IW3MService {
       }
     }
     //
-    _logger.d(
-        '[$runtimeType] request, chainId: $requestChainId, ${jsonEncode(request.toJson())}');
+    _logger.d('[$runtimeType] request, chainId: $requestChainId, ${jsonEncode(request.toJson())}');
     try {
       if (_currentSession!.sessionService.isMagic) {
         return await magicService.instance.request(
@@ -1065,8 +1060,7 @@ class W3MService with ChangeNotifier, CoinbaseService implements IW3MService {
       // Set the optional namespaces to everything in our chain presets
       _optionalNamespaces = {
         StringConstants.namespace: RequiredNamespace(
-          chains:
-              W3MChainPresets.chains.values.map((e) => e.namespace).toList(),
+          chains: W3MChainPresets.chains.values.map((e) => e.namespace).toList(),
           methods: MethodsConstants.allMethods.toSet().toList(),
           events: EventsConstants.allEvents.toSet().toList(),
         ),
@@ -1079,9 +1073,7 @@ class W3MService with ChangeNotifier, CoinbaseService implements IW3MService {
   @override
   Future<void> loadAccountData() async {
     // If there is no selected chain or session, stop. No account to load in.
-    if (_currentSelectedChain == null ||
-        _currentSession == null ||
-        _currentSession?.address == null) {
+    if (_currentSelectedChain == null || _currentSession == null || _currentSession?.address == null) {
       return;
     }
 
@@ -1090,8 +1082,7 @@ class W3MService with ChangeNotifier, CoinbaseService implements IW3MService {
       _currentSelectedChain!.rpcUrl,
       _currentSession!.address!,
     );
-    balanceNotifier.value =
-        '$chainBalance ${_currentSelectedChain?.tokenName ?? ''}';
+    balanceNotifier.value = '$chainBalance ${_currentSelectedChain?.tokenName ?? ''}';
 
     // Get the avatar, each chainId is just a number in string form.
     try {
@@ -1141,6 +1132,47 @@ class W3MService with ChangeNotifier, CoinbaseService implements IW3MService {
         try {
           // Otherwise it meas chain has to be added.
           return await requestAddChain(newChain);
+        } catch (e) {
+          rethrow;
+        }
+      }
+    }
+  }
+
+  @override
+  Future<W3MSwitchChainResult> switchChain(W3MChainInfo newChain) async {
+    if (_currentSession?.sessionService.isMagic == true) {
+      await selectChain(newChain);
+      return W3MSwitchChainResult.success;
+    }
+    final currentChainId = _currentSelectedChain!.namespace;
+    final newChainId = newChain.namespace;
+    _logger.i('[$runtimeType] requesting switch to chain $newChainId');
+    try {
+      await request(
+        topic: _currentSession?.topic ?? '',
+        chainId: currentChainId,
+        switchToChainId: newChainId,
+        request: SessionRequestParams(
+          method: MethodsConstants.walletSwitchEthChain,
+          params: [
+            {'chainId': newChain.chainHexId}
+          ],
+        ),
+      );
+      _currentSelectedChain = newChain;
+      await _setSesionAndChainData(_currentSession!);
+      return W3MSwitchChainResult.success;
+    } catch (e) {
+      _logger.i('[$runtimeType] requestSwitchToChain error $e');
+      // if request errors due to user rejection then set the previous chain
+      if (_isUserRejectedError(e)) {
+        await _setLocalEthChain(_currentSelectedChain!);
+        return W3MSwitchChainResult.rejected;
+      } else {
+        try {
+          // Otherwise it meas chain has to be added.
+          return W3MSwitchChainResult.notSupported;
         } catch (e) {
           rethrow;
         }
@@ -1226,8 +1258,7 @@ class W3MService with ChangeNotifier, CoinbaseService implements IW3MService {
   }
 
   void _checkInitialized() {
-    if (_status != W3MServiceStatus.initialized &&
-        _status != W3MServiceStatus.initializing) {
+    if (_status != W3MServiceStatus.initialized && _status != W3MServiceStatus.initializing) {
       throw W3MServiceException(
         'W3MService must be initialized before calling this method.',
       );
